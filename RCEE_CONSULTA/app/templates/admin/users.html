@@ -1,0 +1,178 @@
+{% extends 'base.html' %}  
+{% block content %}  
+<div class="d-flex justify-content-between align-items-center mb-4">  
+  <h4 class="mb-0">Usuários</h4>  
+</div>  
+  
+<!-- Formulário de criação de usuário -->  
+<div class="card mb-4">  
+  <div class="card-body">  
+    <h5 class="card-title">Criar Novo Usuário</h5>  
+    <form method="post" action="{{ url_for('admin.create_user') }}">  
+      {{ form.csrf_token if form else '' }}  
+      <div class="row g-3">  
+        <div class="col-md-3">  
+          <label for="name" class="form-label">Nome</label>  
+          <input id="name" class="form-control" name="name" placeholder="Nome completo" required>  
+        </div>  
+        <div class="col-md-3">  
+          <label for="email" class="form-label">Email</label>  
+          <input id="email" class="form-control" type="email" name="email" placeholder="email@exemplo.com" required>  
+        </div>  
+        <div class="col-md-2">  
+          <label for="instituicao" class="form-label">Instituição</label>  
+          <input id="instituicao" class="form-control" name="instituicao" placeholder="Ex.: EB, EME" maxlength="100">  
+        </div>  
+        <div class="col-md-2">  
+          <label for="contato" class="form-label">Contato</label>  
+          <input id="contato" class="form-control" type="tel" name="contato" placeholder="(00) 00000-0000" maxlength="20">  
+        </div>  
+        <div class="col-md-2">  
+          <label for="role" class="form-label">Perfil</label>  
+          <select id="role" class="form-select" name="role" required>  
+            <option value="viewer">Viewer</option>  
+            <option value="editor">Editor</option>  
+            <option value="admin">Admin</option>  
+          </select>  
+        </div>  
+      </div>
+      <div class="row g-3 mt-2">
+        <div class="col-md-3">  
+          <label for="password" class="form-label">Senha</label>  
+          <input id="password" class="form-control" type="password" name="password" placeholder="Senha" required>  
+        </div>  
+        <div class="col-md-3 d-flex align-items-end">  
+          <button class="btn btn-primary w-100" type="submit">Criar</button>  
+        </div>  
+      </div>  
+    </form>  
+  </div>  
+</div>  
+  
+<!-- Tabela de usuários -->  
+<div class="card">  
+  <div class="card-body">  
+    <h5 class="card-title">Todos os Usuários</h5>  
+    <div class="table-responsive">  
+      <table class="table table-hover align-middle">  
+        <thead class="table-light">  
+          <tr>  
+            <th>ID</th>  
+            <th>Nome</th>  
+            <th>Email</th>  
+            <th>Instituição</th>  
+            <th>Contato</th>  
+            <th>Perfil</th>  
+            <th>Status</th>  
+            <th style="width: 180px;">Ações</th>  
+          </tr>  
+        </thead>  
+        <tbody>  
+          {% for u in users %}  
+            <tr>  
+              <td>{{ u.id }}</td>  
+              <td>{{ u.name }}</td>  
+              <td>{{ u.email }}</td>  
+              <td>{{ u.instituicao if u.instituicao else '-' }}</td>  
+              <td>{{ u.contato if u.contato else '-' }}</td>  
+              <td>  
+                {% if u.role == 'Admin' %}  
+                  <span class="badge bg-danger">Admin</span>  
+                {% elif u.role == 'Editor' %}  
+                  <span class="badge bg-primary">Editor</span>  
+                {% else %}  
+                  <span class="badge bg-secondary">Viewer</span>  
+                {% endif %}  
+              </td>  
+              <td>  
+                {% if u.is_active %}  
+                  <span class="badge bg-success">Ativo</span>  
+                {% else %}  
+                  <span class="badge bg-warning text-dark">Inativo</span>  
+                {% endif %}  
+              </td>  
+              <td>  
+                <a href="{{ url_for('admin.edit_user', user_id=u.id) }}"   
+                   class="btn btn-sm btn-outline-primary"   
+                   title="Editar usuário">  
+                  Editar  
+                </a>  
+                <button type="button"   
+                        class="btn btn-sm btn-outline-danger delete-user-btn"   
+                        data-user-id="{{ u.id }}"  
+                        data-user-name="{{ u.name }}"  
+                        title="Apagar usuário"  
+                        {% if u.id == current_user.id %}disabled{% endif %}>  
+                  Apagar  
+                </button>  
+              </td>  
+            </tr>  
+          {% else %}  
+            <tr>  
+              <td colspan="8" class="text-center text-muted py-4">  
+                Nenhum usuário cadastrado ainda.  
+              </td>  
+            </tr>  
+          {% endfor %}  
+        </tbody>  
+      </table>  
+    </div>  
+  </div>  
+</div>  
+  
+<!-- Script para deletar usuário via confirmação -->  
+<script>  
+document.addEventListener('click', function(e) {  
+  if (e.target.classList.contains('delete-user-btn')) {  
+    const userId = e.target.dataset.userId;  
+    const userName = e.target.dataset.userName;  
+      
+    if (!confirm(`Tem certeza que deseja excluir o usuário "${userName}"?\n\nEsta ação não pode ser desfeita.`)) {  
+      return;  
+    }  
+      
+    // Criar formulário temporário para enviar POST  
+    const form = document.createElement('form');  
+    form.method = 'POST';  
+    form.action = `/admin/users/${userId}/delete`;
+      
+    // Adicionar CSRF token se disponível  
+    const csrfToken = document.querySelector('input[name="csrf_token"]');  
+    if (csrfToken) {  
+      const csrfInput = document.createElement('input');  
+      csrfInput.type = 'hidden';  
+      csrfInput.name = 'csrf_token';  
+      csrfInput.value = csrfToken.value;  
+      form.appendChild(csrfInput);  
+    }  
+      
+    document.body.appendChild(form);  
+    form.submit();  
+  }  
+});
+
+// Máscara de telefone para o campo Contato
+document.getElementById('contato')?.addEventListener('input', function(e) {
+  let value = e.target.value.replace(/\D/g, '');
+  if (value.length <= 11) {
+    value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
+    value = value.replace(/(\d)(\d{4})$/, '$1-$2');
+  }
+  e.target.value = value;
+});
+</script>  
+  
+<style>  
+.btn-group .btn {  
+  border-radius: 0;  
+}  
+.btn-group .btn:first-child {  
+  border-top-left-radius: 0.25rem;  
+  border-bottom-left-radius: 0.25rem;  
+}  
+.btn-group .btn:last-child {  
+  border-top-right-radius: 0.25rem;  
+  border-bottom-right-radius: 0.25rem;  
+}  
+</style>  
+{% endblock %}

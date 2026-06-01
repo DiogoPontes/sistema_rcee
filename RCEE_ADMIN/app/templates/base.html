@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>RCEE - ADMIN</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+  <!-- Quill -->
+  <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  
+
+  <style>  
+    :root {
+      --rcee-dark:    #0d1b2a;
+      --rcee-navy:    #1a3a5c;
+      --rcee-mid:     #1a5276;
+      --rcee-cyan:    #1a7abf;
+      --rcee-light:   #4aa3d9;
+      --rcee-text:    #d0e8f5;
+    }
+
+    body {  
+      display: flex;  
+      flex-direction: column;  
+      min-height: 100vh;
+      background-color: #f0f4f8;
+    }  
+    .container.main-content {  
+      flex: 1;  
+    }
+
+    /* ── Navbar ── */
+    .navbar-oliva {
+      background: linear-gradient(90deg, var(--rcee-dark), var(--rcee-navy)) !important;
+      border-bottom: 2px solid var(--rcee-cyan);
+      box-shadow: 0 2px 12px rgba(0, 120, 200, 0.25);
+    }
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: #ffffff !important;
+      letter-spacing: 0.05em;
+    }
+    .nav-link {
+      color: #ffffff !important;
+      transition: color 0.2s;
+    }
+    .nav-link:hover {
+      color: var(--rcee-light) !important;
+    }
+    .navbar-text {
+      color: #ffffff !important;
+    }
+    .btn-outline-light {
+      border-color: var(--rcee-light) !important;
+      color: #ffffff !important;
+    }
+    .btn-outline-light:hover {
+      background-color: var(--rcee-cyan) !important;
+      border-color: var(--rcee-cyan) !important;
+      color: #ffffff !important;
+    }
+    /* Garante branco em todos os textos dentro da navbar */
+    .navbar-oliva * {
+      color: #ffffff !important;
+    }
+    .navbar-oliva .nav-link:hover,
+    .navbar-oliva .btn-outline-light:hover {
+      color: var(--rcee-light) !important;
+    }
+
+    /* ── Footer (se existir) ── */
+    .footer-full-width {
+      background: linear-gradient(90deg, var(--rcee-dark), var(--rcee-navy));
+      border-top: 1px solid var(--rcee-cyan);
+      color: var(--rcee-text);
+      padding: 0.75rem 0;
+      text-align: center;
+      font-size: 0.85rem;
+    }
+
+    /* ── Cards e conteúdo geral ── */
+    .card {
+      border: 1px solid #c8dff0;
+      box-shadow: 0 2px 8px rgba(26, 58, 92, 0.1);
+    }
+    .card-header {
+      background-color: var(--rcee-navy);
+      color: #fff;
+      border-bottom: 1px solid var(--rcee-cyan);
+    }
+    .btn-primary {
+      background-color: var(--rcee-navy) !important;
+      border-color: var(--rcee-navy) !important;
+    }
+    .btn-primary:hover {
+      background-color: var(--rcee-dark) !important;
+      border-color: var(--rcee-dark) !important;
+    }
+    .table thead th {
+      background-color: var(--rcee-navy);
+      color: #fff;
+      border-color: var(--rcee-cyan);
+    }
+    a {
+      color: var(--rcee-cyan);
+    }
+    a:hover {
+      color: var(--rcee-light);
+    }
+  </style>
+
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark navbar-oliva mb-4">
+  <div class="container">
+    <a class="navbar-brand" href="{{ url_for('home') }}">RCEE - ADMIN</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="nav">
+      <ul class="navbar-nav me-auto">
+        <a class="nav-link" href="{{ url_for('home') }}">  
+            <i class="bi bi-house-door-fill me-1"></i> Página Inicial  
+        </a>
+        <li class="nav-item">  
+          <a class="nav-link" href="{{ url_for('admin.dashboard') }}">  
+              <i class="bi bi-gear me-1"></i> Administração  
+          </a>  
+        </li>
+      </ul>
+      <ul class="navbar-nav">
+        {% if current_user.is_authenticated %}
+          <li class="nav-item"><span class="navbar-text me-2">Olá, {{ current_user.name }}</span></li>
+          <li class="nav-item">
+            <form method="post" action="{{ url_for('auth.logout') }}">
+
+              <button class="btn btn-outline-light btn-sm">Sair</button>
+            </form>
+          </li>
+        {% else %}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Entrar</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+<div class="container main-content">  
+  {% include 'partials/flash.html' %}  
+  {% block content %}{% endblock %}  
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+<script src="{{ url_for('static', filename='js/quill_init.js') }}"></script>
+</body>
+</html>

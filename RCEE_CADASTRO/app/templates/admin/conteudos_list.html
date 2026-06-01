@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Gerenciar Conteúdos</h3>
+    <a class="btn btn-primary" href="{{ url_for('content.new_post') if 'content.new_post' in current_app.view_functions else url_for('admin_bp.list_conteudos') }}">Novo Conteúdo</a>
+  </div>
+
+  <form class="row g-2 mb-3" method="get">
+    <div class="col-md-4">
+      <input type="text" class="form-control" name="q" placeholder="Buscar por título, resumo ou slug" value="{{ q }}">
+    </div>
+    <div class="col-md-3">
+      <select class="form-select" name="category_id">
+        <option value="">Todas as categorias</option>
+        {% for c in categories %}
+        <option value="{{ c.id }}" {% if category_id|string == c.id|string %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <select class="form-select" name="status">
+        <option value="">Todos os status</option>
+        <option value="{{ PostStatus.DRAFT }}" {% if status == PostStatus.DRAFT %}selected{% endif %}>Rascunho</option>
+        <option value="{{ PostStatus.PUBLISHED }}" {% if status == PostStatus.PUBLISHED %}selected{% endif %}>Publicado</option>
+      </select>
+    </div>
+    <div class="col-md-2 d-grid">
+      <button class="btn btn-outline-secondary" type="submit">Filtrar</button>
+    </div>
+  </form>
+
+  {% if posts %}
+  <div class="table-responsive">
+    <table class="table table-sm align-middle">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Título</th>
+          <th>Categoria</th>
+          <th>Status</th>
+          <th>Publicado em</th>
+          <th>Criado em</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in posts %}
+        <tr>
+          <td>{{ p.id }}</td>
+          <td>{{ p.title }}</td>
+          <td>{{ p.category.name if p.category else "-" }}</td>
+          <td>
+            {% if p.status == PostStatus.PUBLISHED %}
+              <span class="badge bg-success">Publicado</span>
+            {% else %}
+              <span class="badge bg-secondary">Rascunho</span>
+            {% endif %}
+          </td>
+          <td>{{ (p.published_at or '')|datetime if p.published_at else '-' }}</td>
+          <td>{{ p.created_at|datetime }}</td>
+          <td class="text-end">
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_bp.edit_conteudo', post_id=p.id) }}">Editar</a>
+            <form method="post" action="{{ url_for('admin_bp.delete_conteudo', post_id=p.id) }}" class="d-inline" onsubmit="return confirm('Excluir este conteúdo?');">
+              <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <nav>
+    <ul class="pagination">
+      {% if pagination.has_prev %}
+      <li class="page-item">
+        <a class="page-link" href="{{ url_for('admin_bp.list_conteudos', page=pagination.prev_num, per_page=pagination.per_page, q=q, status=status, category_id=category_id) }}">«</a>
+      </li>
+      {% else %}
+      <li class="page-item disabled"><span class="page-link">«</span></li>
+      {% endif %}
+
+      <li class="page-item disabled"><span class="page-link">{{ pagination.page }} / {{ pagination.pages or 1 }}</span></li>
+
+      {% if pagination.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="{{ url_for('admin_bp.list_conteudos', page=pagination.next_num, per_page=pagination.per_page, q=q, status=status, category_id=category_id) }}">»</a>
+      </li>
+      {% else %}
+      <li class="page-item disabled"><span class="page-link">»</span></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% else %}
+    <p>Nenhum conteúdo encontrado.</p>
+  {% endif %}
+</div>
+{% endblock %}

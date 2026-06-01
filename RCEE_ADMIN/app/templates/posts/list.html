@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Todos os Conteúdos</h4>
+    <a class="btn btn-primary px-4 fw-bold" href="{{ url_for('posts.new') }}">
+          <i class="bi bi-plus-lg me-2"></i>Novo Conteúdo
+        </a>
+    
+  </div>
+  
+  <div class="table-responsive">
+    <table class="table table-striped align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>ID</th>
+          <th>Imagem</th>
+          <th>Título</th>
+          <th>Categoria</th>
+          <th>Status</th>
+          <th>Publicado em</th>
+          <th>Criado em</th>
+          <th>Modificado em</th>
+          <th>Criado por</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in posts %}
+        <tr>
+          <td>{{ p.id }}</td>
+
+          <!-- Imagem de Destaque -->
+          <td>
+            {% if p.featured_image %}
+              <img src="{{ url_for('static', filename=p.featured_image.split('static/')[1]) }}"
+                   alt="Imagem de capa"
+                   class="img-thumbnail"
+                   style="max-width: 80px; max-height: 80px; object-fit: cover;">
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+
+          <!-- Título -->
+          <td>{{ p.title }}</td>
+
+          <!-- Categoria -->
+          <td>{{ p.category.name if p.category else "-" }}</td>
+
+          <!-- Status -->
+          <td>  
+            {% if p.status == 'published' %}  
+              <span class="badge bg-warning text-dark">Aguardando Aprovação</span>  
+            {% elif p.status == 'approved' %}  
+              <span class="badge bg-success">Aprovado</span>  
+            {% elif p.status == 'disapproved' %}  
+              <span class="badge bg-danger">Reprovado</span>  
+            {% elif p.status == 'draft' %}  
+              <span class="badge bg-secondary">Rascunho</span>  
+            {% else %}  
+              <span class="badge bg-info">{{ p.status }}</span>  
+            {% endif %}  
+          </td>
+
+          <!-- Datas -->
+          <td>{{ p.published_at|datetime if p.published_at else '-' }}</td>
+          <td>{{ p.created_at|datetime }}</td> 
+          <td>{{ p.updated_at|datetime }}</td>
+
+          <td>{{ p.author.name }} - {{p.author.instituicao }}</td>
+
+          <!-- Ações -->
+          <td>  
+            <div class="d-flex gap-1">  
+              <a class="btn btn-sm btn-outline-primary" href="{{ url_for('posts.edit', post_id=p.id) }}">Editar</a>  
+              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('posts.detail', post_id=p.id) }}">Ver</a>  
+              <form method="post" action="{{ url_for('posts.delete_post', post_id=p.id) }}" 
+                    onsubmit="return confirm('Tem certeza que deseja excluir este conteúdo?');"
+                    class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Apagar</button>  
+              </form>  
+            </div>  
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center text-muted">Nenhum conteúdo cadastrado ainda.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

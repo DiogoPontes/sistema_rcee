@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Editar Categoria</h4>
+    <a class="btn btn-sm btn-secondary" href="{{ url_for('categories.list_categories') }}">
+      ← Voltar
+    </a>
+  </div>
+
+  <form method="post" class="card p-4">
+    <div class="mb-3">
+      <label class="form-label">Nome</label>
+      <input type="text" name="name" class="form-control" value="{{ category.name }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Slug</label>
+      <input type="text" name="slug" class="form-control" value="{{ category.slug }}" placeholder="Deixe vazio para gerar automaticamente">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Descrição</label>
+      <textarea name="description" class="form-control" rows="3">{{ category.description or '' }}</textarea>
+    </div>
+    <div class="row mt-4">
+      <div class="col-md-12 d-flex justify-content-end gap-2">
+        <a href="{{ url_for('admin.categories') }}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+      </div>
+    </div>
+
+
+  </form>
+</div>
+{% endblock %}

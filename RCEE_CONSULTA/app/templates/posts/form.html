@@ -1,0 +1,713 @@
+{% extends 'base.html' %}  
+{% block content %}  
+
+<style>
+  .tox-promotion, 
+  .tox-statusbar__branding,
+  .tox-statusbar__help-text { 
+      display: none !important; 
+  }
+  .tox-tinymce { 
+      border-radius: 4px !important; 
+      border-color: #ced4da !important; 
+  }
+</style>
+
+<div style="background-color: #f8f9fa; padding: 1.5rem; margin: -1.5rem;"> 
+
+<h3 class="mb-4">{{ 'Novo Conteúdo' if mode=='new' else 'Editar Conteúdo' }}</h3>  
+
+<form method="post" enctype="multipart/form-data" id="main-form">  
+  {{ form.csrf_token }}  
+  
+  <div class="row g-4">  
+    <div class="col-lg-8">  
+      <div class="card border-0 shadow-sm mb-4">  
+        <div class="card-header bg-white border-bottom-0">
+          <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
+            <li class="nav-item">
+              <button class="nav-link active" id="content-tab" data-bs-toggle="tab" data-bs-target="#content-tab-pane" type="button">
+                <i class="bi bi-pencil-square me-1"></i> Conteúdo
+              </button>
+            </li>
+            {% if mode == 'edit' %}  
+            <li class="nav-item">
+              <button class="nav-link" id="attachments-tab" data-bs-toggle="tab" data-bs-target="#attachments-tab-pane" type="button">
+                <i class="bi bi-paperclip me-1"></i> Anexos & Arquivos
+              </button>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+        
+        <div class="card-body p-4 tab-content" id="myTabContent">
+          <div class="tab-pane fade show active" id="content-tab-pane">
+            <div class="mb-3">  
+              {{ form.title.label(class="form-label fw-bold") }}  
+              {{ form.title(class="form-control form-control-lg", placeholder="Digite o título aqui...") }}  
+            </div>  
+            
+            <div class="mb-3">
+              {{ form.summary.label(class="form-label fw-bold") }}
+              {{ form.summary(class="form-control", rows=3, placeholder="Digite o resumo manualmente aqui. Ele aparecerá na página inicial.") }}
+            </div>
+
+            <div class="mb-0">  
+              <label class="form-label mb-1 fw-bold">Texto Completo</label>
+              {{ form.body_html(id="body_html", class="form-control", style="visibility: hidden;") }}
+              <div id="editor-loading-status" class="mt-2 text-primary small fw-bold" style="display:none;">
+                <span class="spinner-border spinner-border-sm me-1"></span> Enviando mídia...
+              </div>
+            </div>  
+          </div>
+          
+          {% if mode == 'edit' %}  
+          <div class="tab-pane fade" id="attachments-tab-pane">
+            <div class="alert alert-light border mb-4">
+                <small class="text-muted"><i class="bi bi-info-circle"></i> Anexos para download (PDF, DOC) e Links extras.</small>
+            </div>
+            <div class="row g-4">  
+              <div class="col-md-4 border-end">  
+                <h6 class="fw-bold mb-3"><i class="bi bi-link-45deg"></i> Link Extra</h6>  
+                <div id="link-form-container">  
+                  <div class="mb-2">  
+                    <select class="form-select form-select-sm" id="link-asset-type">  
+                      <option value="external_link">Link Externo</option>
+                      <option value="video_link">Link de Vídeo</option>  
+                      <option value="news_link">Notícia Relacionada</option>  
+                    </select>  
+                  </div>  
+                  <div class="mb-2"> <input type="text" class="form-control form-control-sm" placeholder="Texto" id="link-title"> </div>  
+                  <div class="mb-2"> <input type="url" class="form-control form-control-sm" placeholder="https://..." id="link-url"> </div>  
+                  <button class="btn btn-outline-primary btn-sm w-100" type="button" id="add-link-btn"><i class="bi bi-plus"></i> Adicionar</button>  
+                </div>    
+              </div>  
+              <div class="col-md-4 border-end">    
+                <h6 class="fw-bold mb-3"><i class="bi bi-file-earmark-arrow-up"></i> Upload Arquivo</h6>    
+                <div id="upload-form-container">    
+                  <div class="mb-2"> <input class="form-control form-control-sm" type="text" placeholder="Nome" id="upload-title"> </div>    
+                  <div class="mb-2"> <input class="form-control form-control-sm" type="file" id="upload-file"> </div>    
+                  <button class="btn btn-outline-secondary btn-sm w-100" type="button" id="upload-btn"><i class="bi bi-upload"></i> Enviar</button>    
+                  <div id="upload-loading" class="mt-2 text-center text-primary small" style="display: none;">Enviando...</div>  
+                </div>    
+              </div>  
+              <div class="col-md-4">  
+                <h6 class="fw-bold mb-3">Itens Salvos</h6>  
+                <ul class="list-group list-group-flush small" id="assets-list" style="max-height: 250px; overflow-y: auto;">  
+                  {% for a in post.assets if a.asset_type not in ('carousel', 'editor_media') %}    
+                    <li class="list-group-item px-0 d-flex justify-content-between align-items-center gap-2" data-asset-id="{{ a.id }}">    
+                        <div class="overflow-hidden" style="min-width:0;">  
+                            <strong class="d-block text-truncate" title="{{ a.title }}">{{ a.title }}</strong>  
+                            <span class="badge bg-light text-secondary border">{{ a.asset_type }}</span>  
+                        </div>  
+                        <button type="button" class="btn btn-link text-danger p-0 flex-shrink-0 delete-asset-btn" data-asset-id="{{ a.id }}" title="Excluir">    
+                            <i class="bi bi-trash fs-5"></i>    
+                        </button>    
+                    </li>
+                  {% else %}  
+                    <li class="list-group-item text-muted fst-italic px-0" id="no-assets-msg">Nenhum anexo.</li>  
+                  {% endfor %}  
+                </ul>  
+              </div>  
+            </div>  
+          </div>
+          {% endif %}
+        </div>  
+      </div>  
+    </div>  
+      
+    <div class="col-lg-4">  
+      <div class="sidebar-sticky" style="position: sticky; top: 1.5rem;">
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3 fw-bold">Publicação</h5>
+            <div class="d-grid gap-2">
+              <button class="btn btn-success btn-lg text-white fw-bold py-3" type="submit" style="background: linear-gradient(to right, #198754, #1cb871); border: none;">  
+                <i class="bi bi-check-circle-fill me-2"></i> Salvar
+              </button>
+              <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+          </div>
+        </div>
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="accordion accordion-flush" id="metadataAccordion">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">Detalhes</button>
+              </h2>
+              <div id="collapseOne" class="accordion-collapse collapse show">
+                <div class="accordion-body">
+                  <div class="mb-3"> {{ form.category_id.label(class="form-label small fw-bold") }} {{ form.category_id(class="form-select") }} </div>  
+                  <div class="mb-3"> {{ form.status.label(class="form-label small fw-bold") }} {{ form.status(class="form-select") }} </div>   
+                  <div class="mb-0"> {{ form.published_at.label(class="form-label small fw-bold") }} {{ form.published_at(class="form-control") }} </div>
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingTwo">
+                <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" id="btn-collapse-capa">Imagem de Capa</button>
+              </h2>
+              <div id="collapseTwo" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                  <div class="mb-0 p-3 bg-light rounded text-center border border-dashed" id="featured-image-drop-zone" style="cursor: pointer;">  
+                    <i class="bi bi-image fs-1 text-muted"></i>
+                    {{ form.featured_image(class="form-control d-none", accept="image/*", id="featured_image") }}  
+                    <div class="mt-2"><span class="btn btn-outline-primary btn-sm">Selecionar Imagem</span></div>
+                    
+                    <div id="new-image-preview-container" class="mt-3" style="display:none;">
+                        <p class="mb-1 small text-success fw-bold">Nova imagem selecionada:</p>
+                        <img id="new-image-preview" src="" class="img-fluid rounded shadow-sm border border-success">
+                    </div>
+
+                    {% if mode == 'edit' and post.featured_image %}  
+                      <div class="mt-3" id="current-image-container">
+                        <p class="mb-1 small text-muted">Imagem atual:</p>
+                        {% set img_path = post.featured_image.replace('static/', '') if post.featured_image.startswith('static/') else post.featured_image %}
+                        <img src="{{ url_for('static', filename=img_path) }}" class="img-fluid rounded shadow-sm">
+                      </div>  
+                    {% endif %}  
+                  </div>
+                  
+                  {% if form.featured_image.errors %}
+                    <div class="alert alert-danger mt-2 small" id="featured-image-errors">
+                      {% for error in form.featured_image.errors %}
+                        <div>{{ error }}</div>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>  
+      </div>
+    </div>  
+  </div>  
+</form>  
+</div>
+
+<!-- Modal Carrossel -->
+<div class="modal fade" id="modalCarrossel" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">🖼 Inserir Carrossel de Imagens</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small">Adicione as imagens do carrossel. Você pode fazer upload ou informar uma URL.</p>
+        <div id="lista-imagens-carrossel" class="d-flex flex-column gap-2"></div>
+        <button class="btn btn-sm btn-outline-primary mt-3" onclick="adicionarItemCarrossel()">
+          + Adicionar imagem
+        </button>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" onclick="inserirCarrosselNoEditor()">Inserir no Editor</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Script TinyMCE -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js"></script>
+
+<script>
+const postId = {{ post.id if post and post.id else 'null' }};
+const csrfToken = "{{ form.csrf_token._value() }}";
+
+// ─── Carrossel ────────────────────────────────────────────────────────────────
+
+let _editorCarrossel = null;
+
+function abrirModalCarrossel(editor) {
+    _editorCarrossel = editor;
+    document.getElementById('lista-imagens-carrossel').innerHTML = '';
+    adicionarItemCarrossel();
+    new bootstrap.Modal(document.getElementById('modalCarrossel')).show();
+}
+
+function adicionarItemCarrossel() {
+    const container = document.getElementById('lista-imagens-carrossel');
+    const index = container.children.length;
+    const div = document.createElement('div');
+    div.className = 'card p-2';
+    div.innerHTML = `
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <span class="badge bg-secondary">${index + 1}</span>
+            <input type="text" class="form-control flex-grow-1 carrossel-url" placeholder="URL da imagem">
+            <input type="text" class="form-control carrossel-caption" style="max-width:200px" placeholder="Legenda (opcional)">
+            <button class="btn btn-sm btn-outline-success carrossel-upload-btn" type="button" onclick="uploadCarrosselImagem(this)">
+                📁 Upload
+            </button>
+            <button class="btn btn-sm btn-outline-danger" type="button" onclick="this.closest('.card').remove(); reindexarCarrossel()">✕</button>
+        </div>
+        <div class="carrossel-preview mt-2" style="display:none;">
+            <img src="" style="max-height:80px; border-radius:4px;" alt="preview">
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+function reindexarCarrossel() {
+    document.querySelectorAll('#lista-imagens-carrossel .badge').forEach((badge, i) => {
+        badge.textContent = i + 1;
+    });
+}
+
+function uploadCarrosselImagem(btn) {
+    const card = btn.closest('.card');
+    const urlInput = card.querySelector('.carrossel-url');
+    const preview = card.querySelector('.carrossel-preview');
+    const previewImg = preview.querySelector('img');
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+
+    input.onchange = function() {
+        const file = this.files[0];
+        if (!file) return;
+
+        if (!postId) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                urlInput.value = e.target.result;
+                previewImg.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('title', 'Carrossel - ' + file.name);
+
+        btn.disabled = true;
+        btn.textContent = '⏳';
+
+        const status = document.getElementById('editor-loading-status');
+        if (status) status.style.display = 'block';
+
+        fetch(`/posts/${postId}/assets/carousel-upload`, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (status) status.style.display = 'none';
+            btn.disabled = false;
+            btn.textContent = '📁 Upload';
+            if (data.success) {
+                const url = '/static/' + data.asset.file_path.replace('static/', '');
+                urlInput.value = url;
+                previewImg.src = url;
+                preview.style.display = 'block';
+            } else {
+                alert('Erro: ' + data.message);
+            }
+        })
+        .catch(() => {
+            if (status) status.style.display = 'none';
+            btn.disabled = false;
+            btn.textContent = '📁 Upload';
+            alert('Erro de conexão.');
+        });
+    };
+    input.click();
+}
+
+// Atualiza preview ao digitar URL manualmente
+document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('carrossel-url')) {
+        const card = e.target.closest('.card');
+        const preview = card.querySelector('.carrossel-preview');
+        const previewImg = preview.querySelector('img');
+        const url = e.target.value.trim();
+        if (url) {
+            previewImg.src = url;
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+    }
+});
+
+function inserirCarrosselNoEditor() {
+    const cards = document.querySelectorAll('#lista-imagens-carrossel .card');
+    const imagens = [];
+
+    cards.forEach(card => {
+        const url = card.querySelector('.carrossel-url').value.trim();
+        const caption = card.querySelector('.carrossel-caption').value.trim();
+        if (url) imagens.push({ url, caption });
+    });
+
+    if (!imagens.length) {
+        alert('Adicione ao menos uma imagem com URL.');
+        return;
+    }
+
+    const id = 'carrossel-' + Date.now();
+
+    const indicators = imagens.map((_, i) => `
+        <button type="button" data-bs-target="#${id}" data-bs-slide-to="${i}"
+            class="${i === 0 ? 'active' : ''}" aria-label="Slide ${i + 1}"></button>
+    `).join('');
+
+    const slides = imagens.map((img, i) => `
+        <div class="carousel-item ${i === 0 ? 'active' : ''}">
+            <img src="${img.url}" class="d-block w-100" alt="${img.caption || 'Slide ' + (i + 1)}" style="max-height:500px; object-fit:cover;">
+            ${img.caption ? `
+            <div class="carousel-caption d-none d-md-block" style="background:rgba(0,0,0,0.4); border-radius:6px; padding:6px 12px;">
+                <p class="mb-0">${img.caption}</p>
+            </div>` : ''}
+        </div>
+    `).join('');
+
+    const html = `
+<div id="${id}" class="carousel slide my-4" data-bs-ride="carousel">
+    <div class="carousel-indicators">${indicators}</div>
+    <div class="carousel-inner">${slides}</div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#${id}" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+        <span class="visually-hidden">Anterior</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#${id}" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+        <span class="visually-hidden">Próximo</span>
+    </button>
+</div>
+`;
+
+    _editorCarrossel.insertContent(html);
+    bootstrap.Modal.getInstance(document.getElementById('modalCarrossel')).hide();
+}
+
+// ─── TinyMCE + restante da página ────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', function() {
+    
+    if (document.getElementById('featured-image-errors')) {
+        const collapseTwo = document.getElementById('collapseTwo');
+        const btnCollapseTwo = document.getElementById('btn-collapse-capa');
+        if (collapseTwo && btnCollapseTwo) {
+            collapseTwo.classList.add('show');
+            btnCollapseTwo.classList.remove('collapsed');
+            btnCollapseTwo.setAttribute('aria-expanded', 'true');
+        }
+    }
+
+    // Restaurar aba ativa do localStorage  
+    const activeTab = localStorage.getItem('activeTab');  
+    if (activeTab) {  
+        const tabEl = document.querySelector(`button[data-bs-target="${activeTab}"]`);  
+        if (tabEl) {  
+            const tab = new bootstrap.Tab(tabEl);  
+            tab.show();  
+        }  
+        localStorage.removeItem('activeTab'); // Limpa para não abrir sempre nela  
+    }
+
+    tinymce.init({
+        selector: '#body_html',
+        height: 650,
+        language: 'pt_BR',
+        
+        paste_as_text: false, 
+        paste_data_images: true,
+        paste_merge_formats: true, 
+        paste_remove_styles: false, 
+        paste_webkit_styles: 'all', 
+        paste_retain_style_properties: 'all', 
+        verify_html: false,
+        cleanup: false,
+        valid_elements: '*[*]',
+        valid_children: '*[*]',
+        extended_valid_elements : "*[*]", 
+        convert_urls: false, 
+        relative_urls: false,
+        remove_script_host: false,
+        link_default_protocol: 'https',
+        default_link_target: '_blank',
+        promotion: false, 
+        branding: false,
+        
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview', 'anchor',
+            'searchreplace', 'visualblocks', 'code', 'fullscreen', 'insertdatetime', 'media', 
+            'table', 'help', 'wordcount', 'emoticons', 'pagebreak', 'nonbreaking', 'directionality'
+        ],
+
+        toolbar_mode: 'wrap',
+        toolbar: 
+            'undo redo | fontselect fontsizeselect | formatselect | ' +
+            'bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | ' +
+            'forecolor backcolor | bullist numlist outdent indent | ' +
+            'link image media table carrossel | removeformat | fullscreen preview code',
+            
+        menubar: 'file edit view insert format tools table help',
+
+        setup: function(editor) {
+            editor.ui.registry.addButton('carrossel', {
+                text: '🖼 Carrossel',
+                tooltip: 'Inserir carrossel de imagens',
+                onAction: function() {
+                    abrirModalCarrossel(editor);
+                }
+            });
+        },
+        
+        images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+            if (!postId) {
+                resolve('data:' + blobInfo.blob().type + ';base64,' + blobInfo.base64());
+                return;
+            }
+            const formData = new FormData();
+            formData.append('file', blobInfo.blob(), blobInfo.filename());
+            formData.append('title', 'Imagem Editor');
+            formData.append('asset_type', 'editor_media');
+
+            const status = document.getElementById('editor-loading-status');
+            if(status) status.style.display = 'block';
+
+            fetch(`/posts/${postId}/assets/upload`, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if(status) status.style.display = 'none';
+                if (data.success) {
+                    resolve('/static/' + data.asset.file_path.replace('static/', ''));
+                } else {
+                    reject('Erro: ' + data.message);
+                }
+            })
+            .catch(err => {
+                if(status) status.style.display = 'none';
+                reject('Falha no upload.');
+            });
+        }),
+
+        file_picker_callback: function (cb, value, meta) {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            
+            if (meta.filetype === 'image') input.setAttribute('accept', 'image/*');
+            if (meta.filetype === 'media') input.setAttribute('accept', 'video/*, audio/*');
+
+            input.onchange = function () {
+                const file = this.files[0];
+                if (!postId) {
+                    if (meta.filetype === 'image') {
+                        const reader = new FileReader();
+                        reader.onload = function () { cb(reader.result, { title: file.name }); };
+                        reader.readAsDataURL(file);
+                    } else {
+                        alert('Salve o rascunho primeiro para upload de vídeos.');
+                    }
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('title', 'Mídia ' + file.name);
+                formData.append('asset_type', 'editor_media');
+
+                const status = document.getElementById('editor-loading-status');
+                if(status) status.style.display = 'block';
+
+                fetch(`/posts/${postId}/assets/upload`, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if(status) status.style.display = 'none';
+                    if (data.success) {
+                        cb('/static/' + data.asset.file_path.replace('static/', ''), { title: file.name });
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(err => {
+                    if(status) status.style.display = 'none';
+                    alert('Erro de conexão.');
+                });
+            };
+            input.click();
+        }
+    });
+
+    const dropZone = document.getElementById('featured-image-drop-zone');
+    const inputCapa = document.getElementById('featured_image');
+    const previewContainer = document.getElementById('new-image-preview-container');
+    const previewImage = document.getElementById('new-image-preview');
+    
+    if(dropZone && inputCapa) {
+        dropZone.addEventListener('click', (e) => { if(e.target !== inputCapa) inputCapa.click(); });
+        
+        inputCapa.addEventListener('change', () => {
+             if(inputCapa.files.length > 0) {
+                 const file = inputCapa.files[0];
+                 dropZone.style.borderColor = '#198754'; 
+                 dropZone.style.backgroundColor = '#d1e7dd';
+                 const reader = new FileReader();
+                 reader.onload = function(e) {
+                     if(previewContainer && previewImage) {
+                        previewImage.src = e.target.result;
+                        previewContainer.style.display = 'block';
+                        const oldImg = document.getElementById('current-image-container');
+                        if(oldImg) oldImg.style.opacity = '0.5';
+                     }
+                 }
+                 reader.readAsDataURL(file);
+                 if (typeof showAlert === 'function') {
+                    showAlert('success', 'Capa selecionada: ' + file.name + '. Clique em "Salvar Tudo" para confirmar.');
+                 } else {
+                    alert('Capa selecionada: ' + file.name + '. Clique em "Salvar Tudo" para confirmar.');
+                 }
+             }
+        });
+        
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.backgroundColor = '#e9ecef'; });
+        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.style.backgroundColor = ''; });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault(); 
+            dropZone.style.backgroundColor = '#d1e7dd';
+            if (e.dataTransfer.files.length > 0) {
+                inputCapa.files = e.dataTransfer.files;
+                const event = new Event('change');
+                inputCapa.dispatchEvent(event);
+            }
+        });
+    }
+});
+</script>
+
+{% if mode == 'edit' %}
+<script>
+    function escapeHtml(text) {
+        if (!text) return "";
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function showAlert(type, message) {
+        const existingAlerts = document.querySelectorAll('.alert-ajax');
+        existingAlerts.forEach(alert => alert.remove());
+
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show alert-ajax`;
+        alertDiv.style.position = 'fixed';
+        alertDiv.style.top = '20px';
+        alertDiv.style.right = '20px';
+        alertDiv.style.zIndex = '9999';
+        alertDiv.style.minWidth = '300px';
+        alertDiv.style.maxWidth = '500px';
+        alertDiv.innerHTML = `
+            ${escapeHtml(message)}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(alertDiv);
+        setTimeout(() => {
+            alertDiv.classList.remove('show');
+            setTimeout(() => alertDiv.remove(), 150);
+        }, 3000);
+    }
+
+    document.getElementById('add-link-btn').addEventListener('click', () => {
+        const type = document.getElementById('link-asset-type').value;
+        const title = document.getElementById('link-title').value;
+        const url = document.getElementById('link-url').value;
+        if(!url) return showAlert('warning', 'URL obrigatória');
+        
+        fetch(`/posts/${postId}/assets/link`, {  
+            method: 'POST',  
+            headers: {  
+                'Content-Type': 'application/json',  
+                'X-CSRFToken': csrfToken,  
+                'X-Requested-With': 'XMLHttpRequest'  
+            },  
+            body: JSON.stringify({ asset_type: type, title: title || url, url: url })  
+        })  
+        .then(r => {  
+            if (!r.ok) throw new Error('HTTP ' + r.status);  
+            return r.json();  
+        })  
+        .then(d => {  
+            if (d.success) {  
+                localStorage.setItem('activeTab', '#attachments-tab-pane'); // Salva a aba  
+                location.reload();  
+            } else {  
+                showAlert('danger', d.message || 'Erro ao salvar link.');  
+            }  
+        })  
+        .catch(err => {  
+            showAlert('danger', 'Erro de conexão: ' + err.message);  
+        });
+    });
+
+    document.getElementById('upload-btn').addEventListener('click', () => {
+        const fileInput = document.getElementById('upload-file');
+        if(fileInput.files.length === 0) return showAlert('warning', 'Selecione arquivo');
+        
+        const fd = new FormData(); fd.append('file', fileInput.files[0]);
+        fd.append('title', document.getElementById('upload-title').value);
+        document.getElementById('upload-loading').style.display = 'block';
+        
+        fetch(`/posts/${postId}/assets/upload`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: fd
+        })
+        .then(r => r.json()).then(d => { 
+            if(d.success) {
+                localStorage.setItem('activeTab', '#attachments-tab-pane');
+                location.reload();
+            } else { 
+                document.getElementById('upload-loading').style.display = 'none';
+                showAlert('danger', d.message); 
+            }
+        });
+    });
+
+    document.querySelectorAll('.delete-asset-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if(confirm('Excluir?')) {
+                fetch(`/posts/${postId}/assets/${this.dataset.assetId}/delete`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).then(r => r.json()).then(d => { 
+                  if(d.success) {
+                    localStorage.setItem('activeTab', '#attachments-tab-pane');
+                    location.reload();
+                  } else {
+                    showAlert('danger', d.message || 'Erro ao excluir.');  
+                  }
+                 });
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}
+

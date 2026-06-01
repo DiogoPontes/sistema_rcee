@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container text-center py-5">
+    <h1 class="display-1 text-danger">403</h1>
+    <h3 class="mb-4">Acesso Negado</h3>
+    <p class="lead mb-4">Você não tem permissão para acessar esta página.</p>
+    <a href="{{ url_for('home') }}" class="btn btn-primary">Voltar para a Página Inicial</a>
+</div>
+{% endblock %}

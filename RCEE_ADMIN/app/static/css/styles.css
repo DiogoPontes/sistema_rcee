@@ -1,0 +1,99 @@
+/* ── Tipografia de login/apresentação ── */
+.rcee-subtitle {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  color: white;
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+.rcee-system-name {
+  color: #fdfdfc;
+  font-weight: 800;
+  font-size: 2.3rem;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+.rcee-system-desc {
+  color: #fcfcfb;
+  font-style: italic;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.rcee-version {
+  color: #fdfdfd;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+/* ── Footer fixo (rodapé interno de telas) ── */
+.rcee-footer {
+  background-color: #181a1d;
+  color: #ffffff;
+  text-align: center;
+  padding: 15px 0;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  font-size: 0.9rem;
+  z-index: 1000;
+}
+
+/* ── Footer principal ── */
+.footer-full-width {
+  flex-shrink: 0;
+  background: linear-gradient(90deg, #0d1b2a, #1a3a5c);
+  color: #ffffff !important;
+  padding: 15px 0;
+  border-top: 1px solid #1a7abf;
+}
+
+.footer-full-width .footer-text {
+  color: #ffffff !important;
+  text-align: center;
+  font-size: 0.85rem;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 400;
+  margin: 0;
+}
+
+/* ── Navbar RCEE ── */
+.navbar-oliva {
+  background: linear-gradient(90deg, #0d1b2a, #1a3a5c) !important;
+  border-bottom: 2px solid #1a7abf;
+  box-shadow: 0 2px 12px rgba(0, 120, 200, 0.25);
+}
+
+.navbar-oliva .navbar-brand,
+.navbar-oliva .nav-link,
+.navbar-oliva .navbar-text,
+.navbar-oliva * {
+  color: #ffffff !important;
+}
+
+.navbar-oliva .nav-link:hover {
+  color: #4aa3d9 !important;
+}
+
+.navbar-oliva .navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.navbar-oliva .navbar-toggler-icon {
+  filter: brightness(0) invert(1);
+}
+
+.navbar-oliva .btn-outline-light {
+  border-color: #4aa3d9 !important;
+  color: #ffffff !important;
+}
+
+.navbar-oliva .btn-outline-light:hover {
+  background-color: #1a7abf !important;
+  border-color: #1a7abf !important;
+  color: #ffffff !important;
+}

@@ -1,0 +1,149 @@
+# docker-compose.yml - Sistema RCEE (ajustado)
+services:
+  # ─── MYSQL (central, inicializa os 3 bancos via mysql-init) ─────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: rcee_mysql
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: alfa0101
+      MYSQL_DATABASE: rcee_cadastro_db
+      MYSQL_USER: rcee_user
+      MYSQL_PASSWORD: rcee123
+    ports:
+      - "3316:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-init/:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-palfa0101"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  # ─── ZOOKEEPER + KAFKA (dev local) ─────────────────────────────────────────
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: rcee_zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: rcee_kafka
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: rcee_zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:229092,PLAINTEXT_HOST://localhost:229092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"   # expõe broker para host em 9092 (útil para debug/clients)
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── RCEE_CADASTRO (web)
+  rcee-cadastro:
+    build: ./RCEE_CADASTRO
+    env_file:
+      - ./RCEE_CADASTRO/.env
+    ports:
+      - "5012:5000"
+    volumes:
+      - ./RCEE_CADASTRO/uploads:/app/app/static/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    restart: unless-stopped
+
+  # ─── RCEE_ADMIN (web)
+  rcee-admin:
+    build: ./RCEE_ADMIN
+    env_file:
+      - ./RCEE_ADMIN/.env
+    ports:
+      - "5015:5000"
+    volumes:
+      - ./RCEE_ADMIN/uploads:/app/app/static/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    restart: unless-stopped
+
+  # ─── RCEE_CONSULTA (web)
+  rcee-consulta:
+    build: ./RCEE_CONSULTA
+    env_file:
+      - ./RCEE_CONSULTA/.env
+    ports:
+      - "5016:5000"
+    volumes:
+      - ./RCEE_CONSULTA/uploads:/app/app/static/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    restart: unless-stopped
+
+  # ─── CONSUMERS (workers que consomem tópicos Kafka)
+  cadastro_consumer:
+    build: ./RCEE_CADASTRO
+    env_file:
+      - ./RCEE_CADASTRO/.env.consumer
+    command: ["python", "-u", "run_consumer.py"]
+    volumes:
+      - ./RCEE_CADASTRO/uploads:/app/app/static/uploads
+    depends_on:
+      kafka:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    restart: "no"
+
+  consulta_consumer:
+    build: ./RCEE_CONSULTA
+    env_file:
+      - ./RCEE_CONSULTA/.env.consumer
+    command: ["python", "-u", "run_consumer.py"]
+    volumes:
+      - ./RCEE_CONSULTA/uploads:/app/app/static/uploads
+    depends_on:
+      kafka:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    restart: "no"
+
+volumes:
+  mysql_data:
+    name: sistema_rcee_mysql_data
+  kafka_data:
+    name: sistema_rcee_kafka_data
+  zookeeper_data:
+    name: sistema_rcee_zookeeper_data

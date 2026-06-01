@@ -1,0 +1,104 @@
+.footer-full-width {
+    margin-top: auto;
+    background-color: var(--primary-bg);
+    padding: 25px 0;
+    color: var(--text-muted);
+}
+
+    .footer-full-width .footer-text {
+        text-align: center;
+        font-size: 0.9rem;
+        font-family: Arial, Helvetica, sans-serif;
+        font-weight: 400;
+    }
+
+.rcee-subtitle {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        color: white;
+        font-weight: 400;
+        opacity: 0.9;
+      }
+
+      
+      .rcee-system-name {
+        color: #fdfdfc; 
+        font-weight: 800;
+        font-size: 2.3rem;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+      }
+
+   
+      .rcee-system-desc {
+        color: #fcfcfb;
+        font-style: italic;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+
+
+      .rcee-version {
+        color: #fdfdfd;
+        font-size: 0.9rem;
+        font-weight: bold;
+      }
+
+      .rcee-footer {
+        background-color: #4a5e2a;
+        color: #ffffff;
+        text-align: center;
+        padding: 15px 0;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        font-size: 0.9rem;
+        z-index: 1000; 
+      }
+
+/* Estilização do Footer conforme solicitado */  
+      .footer-full-width {  
+        flex-shrink: 0;  
+        /* Usando o mesmo gradiente do left-panel para consistência */  
+        background: linear-gradient(135deg, #34421e, #36441e);  
+        color: #ffffff !important; /* Letra branca */  
+        padding: 15px 0;  
+        border-top: 1px solid #444;  
+      }
+
+      .footer-full-width .footer-text {  
+        color: #ffffff !important;  
+        text-align: center;  
+        font-size: 0.85rem;  
+        margin: 0;  
+      }
+
+      /* Navbar verde escuro (oliva) */
+    .navbar-oliva {
+      background-color: #3b4a1e !important;
+    }
+    .navbar-oliva .navbar-brand,
+    .navbar-oliva .nav-link,
+    .navbar-oliva .navbar-text {
+      color: #e8f0d0 !important;
+    }
+    .navbar-oliva .nav-link:hover {
+      color: #ffffff !important;
+    }
+    .navbar-oliva .navbar-toggler {
+      border-color: rgba(232, 240, 208, 0.4);
+    }
+    .navbar-oliva .navbar-toggler-icon {
+      filter: brightness(0) invert(1);
+    }
+    .navbar-oliva .btn-outline-light {
+      border-color: #a3b56a;
+      color: #e8f0d0;
+    }
+    .navbar-oliva .btn-outline-light:hover {
+      background-color: #4a5e2a;
+      border-color: #4a5e2a;
+      color: #fff;
+    }

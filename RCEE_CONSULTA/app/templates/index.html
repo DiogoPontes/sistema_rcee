@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5">
+
+  <div class="row align-items-center mb-5 border-bottom pb-4">
+    <div class="col-md-8">
+      <h2 class="fw-bold text-dark mb-1">Publicações Recentes</h2>
+      <p class="text-muted mb-0">Acompanhe as últimas notícias e atualizações.</p>
+    </div>
+    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+      {% if current_user.is_authenticated and current_user.role != 'Viewer' %} 
+        <a class="btn btn-primary px-4 fw-bold" href="{{ url_for('posts.new') }}">
+          <i class="bi bi-plus-lg me-2"></i>Novo Conteúdo
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="bg-light p-4 rounded-3 mb-5 border">
+    
+    <div class="d-flex align-items-center mb-3">
+      <i class="bi bi-filter me-2 text-secondary"></i>
+      <h6 class="fw-bold mb-0 text-secondary text-uppercase small ls-1">Filtros de Busca</h6>
+    </div>
+
+    <form method="GET" action="{{ url_for('home') }}" class="row g-3">
+      
+      <div class="col-md-3">
+        <label for="category_id" class="form-label small fw-bold text-muted">Categoria</label>
+        <select name="category_id" id="category_id" class="form-select bg-white border-secondary-subtle">
+          <option value="">Todas as categorias</option>
+          {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if filters.category_id == cat.id %}selected{% endif %}>
+              {{ cat.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label for="title" class="form-label small fw-bold text-muted">Título</label>
+        <input 
+          type="text" 
+          name="title" 
+          id="title" 
+          class="form-control bg-white border-secondary-subtle" 
+          placeholder="Buscar no título..."
+          value="{{ filters.title or '' }}">
+      </div>
+
+      <div class="col-md-2">
+        <label for="text" class="form-label small fw-bold text-muted">Conteúdo</label>
+        <input 
+          type="text" 
+          name="text" 
+          id="text" 
+          class="form-control bg-white border-secondary-subtle" 
+          placeholder="Palavra-chave..."
+          value="{{ filters.text or '' }}">
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label small fw-bold text-muted">Período</label>
+        <div class="d-flex gap-2">
+          <input 
+            type="date" 
+            name="date_from" 
+            id="date_from" 
+            class="form-control bg-white border-secondary-subtle small-date"
+            title="Data Inicial"
+            value="{{ filters.date_from or '' }}">
+          <input 
+            type="date" 
+            name="date_to" 
+            id="date_to" 
+            class="form-control bg-white border-secondary-subtle small-date"
+            title="Data Final"
+            value="{{ filters.date_to or '' }}">
+        </div>
+      </div>
+
+      <div class="col-12 d-flex justify-content-end gap-2 mt-4 pt-2 border-top border-secondary-subtle">
+        <a href="{{ url_for('home') }}" class="btn btn-link text-decoration-none text-secondary btn-sm">
+          Limpar
+        </a>
+        <button type="submit" class="btn btn-secondary btn-sm px-4 fw-bold">
+          Filtrar Resultados
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+
+  <div class="row g-4">
+    {% for post in posts %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 border rounded-3 shadow-sm hover-shadow transition-base bg-white overflow-hidden">
+        
+        <div class="ratio ratio-16x9 bg-light border-bottom">
+          {% if post.featured_image %}
+            {% set clean_path = post.featured_image.replace('static/', '', 1).replace('\\', '/') %}
+            
+            <img src="{{ url_for('static', filename=clean_path) }}" 
+                 class="object-fit-cover object-position-top" 
+                 alt="{{ post.title }}"
+                 style="width: 100%; height: 100%; object-fit: cover;"
+                 onerror="this.onerror=null; this.src='https://placehold.co/800x450?text=Erro+diretório';">
+          {% else %}
+            <div class="d-flex flex-column align-items-center justify-content-center text-muted h-100">  
+              <i class="bi bi-image fs-3 opacity-25"></i>  
+              <span class="small mt-2 opacity-50">Sem imagem</span>  
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="card-body p-4 d-flex flex-column">
+
+          {% if post.status == PostStatus.DRAFT %}
+              <span class="badge bg-secondary mb-2">
+                  <i class="bi bi-pencil-square me-1"></i>Rascunho
+              </span>
+          {% elif post.status == PostStatus.PUBLISHED %}
+              <span class="badge bg-warning text-dark mb-2">
+                  <i class="bi bi-clock me-1"></i>Aguardando Aprovação
+              </span>
+          {% elif post.status == PostStatus.APPROVED %}
+              <span class="badge bg-success mb-2">
+                  <i class="bi bi-check-circle me-1"></i>Aprovado
+              </span>
+          {% elif post.status == PostStatus.DISAPPROVED %}
+              <span class="badge bg-danger mb-2">
+                  <i class="bi bi-x-circle me-1"></i>Reprovado
+              </span>
+          {% endif %}
+          
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge bg-light text-secondary border fw-normal">
+              {{ post.category.name if post.category else 'Geral' }}
+            </span>
+            
+          </div>
+          
+          <h5 class="card-title fw-bold text-dark mb-3 lh-sm text-clamp-title">
+            {{ post.title }}
+          </h5>
+          
+          <p class="card-text text-secondary small flex-grow-1 text-clamp-summary mb-4">
+            {% if post.summary %}  
+              {{ post.summary }}  
+            {% else %}  
+              <span class="text-muted fst-italic">Sem resumo disponível.</span>
+            {% endif %}
+          </p>
+
+
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <p class="card-text text-muted small mb-2">
+              
+              
+              <!-- 
+              <i class="bi bi-person me-1"></i>
+              <strong>{{ post.author.name }}</strong>
+              {% if post.author.instituicao %}
+                <span class="text-secondary">• {{ post.author.instituicao }}</span>
+              {% endif %} -->
+            </p>
+
+            {% if post.published_at %}
+            <p class="card-text text-muted small mb-2">
+              <i class="bi bi-calendar3 me-1"></i>
+              {{ post.published_at.strftime('%d/%m/%Y %H:%M') }}
+            </p>
+            {% endif %}
+          </div>
+          
+          <div class="d-flex align-items-center pt-3 border-top mt-auto">
+          </div>
+
+          <a href="{{ url_for('posts.detail', post_id=post.id) }}" 
+            class="btn btn-outline-primary btn-sm mt-auto">
+            Abrir
+          </a>
+          {% if current_user.is_authenticated   
+                and current_user.role != 'Viewer'  
+                and (current_user.role == 'Admin' or current_user.id == post.author_id)
+                and (post.status != PostStatus.PUBLISHED) and (post.status != PostStatus.APPROVED) %}  
+            <a href="{{ url_for('posts.edit', post_id=post.id) }}"   
+              class="btn btn-outline-secondary btn-sm mt-2">  
+              Editar conteúdo  
+            </a>  
+              
+            <button type="button"   
+                    class="btn btn-outline-danger btn-sm mt-2"   
+                    data-bs-toggle="modal"   
+                    data-bs-target="#deleteModal{{ post.id }}">  
+              Apagar  
+            </button>  
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="col-12 py-5">
+      <div class="text-center text-muted border rounded-3 bg-light p-5">
+        <i class="bi bi-search fs-1 mb-3 opacity-50"></i>
+        <h5>Nenhum resultado encontrado</h5>
+        <p class="mb-0">Tente ajustar os termos da sua busca ou limpar os filtros.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- 🗑️ MODAIS DE CONFIRMAÇÃO DE EXCLUSÃO -->  
+  {% for post in posts %}  
+    {% if current_user.is_authenticated   
+          and current_user.role != 'Viewer'  
+          and (current_user.role == 'Admin' or current_user.id == post.author_id) %}  
+      <div class="modal fade" id="deleteModal{{ post.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ post.id }}" aria-hidden="true">  
+        <div class="modal-dialog">  
+          <div class="modal-content">  
+            <div class="modal-header">  
+              <h5 class="modal-title" id="deleteModalLabel{{ post.id }}">Confirmar exclusão</h5>  
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>  
+            </div>  
+            <div class="modal-body">  
+              Tem certeza que deseja excluir o conteúdo <strong>"{{ post.title }}"</strong>?  
+              <br><small class="text-muted">Esta ação não pode ser desfeita.</small>  
+            </div>  
+            <div class="modal-footer">  
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>  
+              <form method="POST" action="{{ url_for('posts.delete_post', post_id=post.id) }}" style="display:inline;">  
+                <button type="submit" class="btn btn-danger">Excluir</button>  
+              </form>  
+            </div>  
+          </div>  
+        </div>  
+      </div>  
+    {% endif %}  
+  {% endfor %}
+
+</div>
+{% endblock %}

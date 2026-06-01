@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RCEE - ADMIN</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+      <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        background-color: #ffffff;
+        margin: 0;
+        overflow-x: hidden; 
+      }
+
+      .login-container {
+        min-height: 100vh;
+        display: flex;
+        flex-wrap: wrap;
+      }
+      
+      
+      .left-panel {
+        background: linear-gradient(135deg, #0d1b2a, #1a3a5c);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+        text-align: center;
+      }
+
+      
+      .left-panel img {
+        max-width: 1100px;
+        height: auto;
+        margin-bottom: 1.5rem;
+        background: transparent;
+        
+      }
+      
+      .right-panel {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background-color: #ffffff;
+        position: relative;
+      }
+
+      .nexus-footer {
+            position: relative;
+        }
+      
+      
+      .login-card {
+        width: 100%;
+        max-width: 400px;
+        padding: 2.5rem;
+        border: 1px solid #e0e0e0; 
+        border-radius: 8px; 
+        background-color: #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
+      }
+
+
+      .login-header {
+        text-align: center;
+        font-size: 2rem;
+        font-weight: 500;
+        color: #0d1b2a;
+        margin-bottom: 2rem;
+      }
+      
+
+      .form-label {
+        font-weight: 500;
+        color: #1a3a5c;
+        margin-bottom: 0.5rem;
+      }
+
+
+      .form-control {
+        border-radius: 6px;
+        border: 1px solid #ced4da;
+        padding: 0.75rem;
+        background-color: #fff;
+      }
+      
+      .form-control:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+      }
+      
+
+      .btn-custom-login {
+        background-color: #1a3a5c;
+        border: none;
+        border-radius: 6px;
+        padding: 0.8rem;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-top: 1rem;
+        transition: background-color 0.2s;
+      }
+      .btn-custom-login:hover {
+        background-color: #0d1b2a;
+      }
+
+      .rcee-title {
+        font-weight: 900;
+        font-size: 2.2rem;
+        color: white;
+        margin-bottom: 0.2rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    
+
+
+      @media (max-width: 768px) {
+        .left-panel { 
+            padding: 3rem 1rem; 
+            min-height: auto; 
+        }
+        
+        .right-panel { 
+            padding: 2rem 1rem; 
+        }
+      }
+    </style>
+  </head>
+  <body>
+
+    
+
+    <div class="container-fluid login-container d-flex p-0">
+
+      <div class="col-md-6 left-panel">
+          <img src="{{ url_for('static', filename='imagens/logo.png') }}" alt="Logo">
+          <div class="rcee-system-name">ADMIN</div>
+          <div class="rcee-version">Versão 1.1</div>
+      </div>
+          
+      <!-- Bloco direito com formulário de login -->
+      <div class="col-md-6 right-panel">
+        <div class="card shadow rounded p-4 w-100" style="max-width: 450px;">
+          <h3 class="text-center mb-4">Login</h3>
+
+          <div class="card-body p-0">
+            <form method="post" novalidate>
+              {{ form.csrf_token }}
+    
+              <!-- EMAIL -->
+              <div class="mb-4">
+                <label for="{{ form.email.id }}" class="form-label fw-semibold text-secondary small mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-envelope me-1" viewBox="0 0 16 16">
+                    <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1zm13 2.383-4.708 2.825L15 11.105zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741M1 11.105l4.708-2.897L1 5.383z"/>
+                  </svg>
+                  E-mail
+                </label>
+                {{ form.email(class="form-control form-control-lg", placeholder="seu@email.com", style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;", autocomplete="email") }}
+              </div>
+    
+              <!-- SENHA -->
+              <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <label for="{{ form.password.id }}" class="form-label fw-semibold text-secondary small mb-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lock me-1" viewBox="0 0 16 16">
+                      <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2M5 8h6a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1"/>
+                    </svg>
+                    Senha
+                  </label>
+                </div>
+                {{ form.password(class="form-control form-control-lg", placeholder="••••••••", style="border-radius: 10px; border: 2px solid #e9ecef; transition: all 0.3s ease;", autocomplete="current-password") }}
+              </div>
+    
+              
+              <!-- BOTÃO -->
+              <div class="d-grid mt-4 mb-3">
+                <button class="btn btn-lg fw-semibold py-3" type="submit" style="background: #1a3a5c; border: none; border-radius: 10px; color: white; transition: transform 0.2s ease, box-shadow 0.3s ease;">
+                  Entrar
+                </button>
+              </div>
+    
+            </form>
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+    
+    
+
+    <!-- Scripts Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+      body {
+        margin: 0;  
+        padding: 0;  
+        overflow: hidden;  
+        background-color: #f0f2f5;  
+        display: flex;  
+        flex-direction: column;  
+        height: 100vh; /* tela inteira */
+      }
+
+      .container-fluid.login-container {  
+        flex: 1; /* ocupa o espaço restante */  
+        min-height: 0; /* importante para o flex funcionar corretamente */  
+        overflow: hidden;  
+      }
+
+      .left-panel, .right-panel {  
+        overflow-y: auto; /* scroll interno se necessário */  
+      }
+
+      .container-fluid {  
+        padding: 0 !important;  
+      }
+
+      .form-control:focus {
+        border-color: #1a7abf !important;
+        box-shadow: 0 0 0 0.2rem rgba(26, 122, 191, 0.25) !important;
+      }
+
+      .form-control:hover:not(:focus) {
+        border-color: #4aa3d9 !important;
+      }
+
+      button[type="submit"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(26, 58, 92, 0.5) !important;
+        background: #0d1b2a !important;
+      }
+
+      button[type="submit"]:active {
+        transform: translateY(0);
+      }
+
+      .card {
+        animation: fadeInUp 0.5s ease-out;
+      }
+
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+
+    
+
+  </body>
+</html>

@@ -1,0 +1,460 @@
+{% extends 'base.html' %}  
+{% block content %}  
+<h4>{{ 'Novo Conteúdo' if mode=='new' else 'Editar Conteúdo' }}</h4>  
+<form method="post" enctype="multipart/form-data" id="main-form">  
+  {{ form.csrf_token }}  
+  <div class="row">  
+    <div class="col-md-6">  
+      <div class="mb-3">  
+        {{ form.title.label(class="form-label") }}  
+        {{ form.title(class="form-control") }}  
+      </div>  
+    </div>   
+    <div class="col-md-3">  
+      <div class="mb-3">  
+        {{ form.category_id.label(class="form-label") }}  
+        {{ form.category_id(class="form-select") }}    
+      </div>  
+    </div>   
+    <div class="col-md-3">  
+      <div class="mb-3">  
+        {{ form.slug.label(class="form-label") }}  
+        {{ form.slug(class="form-control") }}  
+        <small class="text-muted">Deixe vazio para gerar automaticamente.</small>  
+      </div>  
+    </div>  
+    <div class="col-md-8">  
+      <div class="mb-3">  
+        {{ form.summary.label(class="form-label") }}  
+        {{ form.summary(class="form-control", rows=7) }}  
+      </div>  
+    </div>  
+    <div class="col-md-4">  
+      <div class="mb-3">  
+        {{ form.status.label(class="form-label") }}  
+        {{ form.status(class="form-select") }}  
+      </div> 
+      <div class="col-md-12">  
+        {{ form.published_at.label(class="form-label") }}  
+        {{ form.published_at(class="form-control") }}  
+        <small class="text-muted">Defina a data e hora da publicação ou deixe em branco para definir automaticamente ao publicar.</small>  
+      </div> 
+    </div>  
+    <div class="col-md-12">  
+      <div class="mb-3">  
+        {{ form.featured_image.label(class="form-label") }}  
+        {{ form.featured_image(class="form-control", accept="image/*") }}  
+        <small class="text-muted">Imagem que será exibida como capa da publicação (JPG, PNG, GIF)</small>  
+        {% if mode == 'edit' and post.featured_image %}  
+          <div class="mt-2">  
+            <p class="mb-1"><strong>Imagem atual:</strong></p>  
+            <img src="{{ url_for('static', filename=post.featured_image.split('static/')[1]) }}"   
+                 alt="Capa"   
+                 class="img-thumbnail"   
+                 style="max-width: 300px;">  
+          </div>  
+        {% endif %}  
+      </div>  
+    </div>  
+    <div class="col-md-12">  
+      <div class="mb-3">  
+        <label class="form-label">Texto (WYSIWYG)</label>  
+        <div id="quill-editor" style="height: 300px;">{{ form.body_html.data|default('', true)|safe }}</div>  
+        {{ form.body_html(id="body_html", style="display:none;") }}  
+      </div>  
+    </div>  
+  </div>  
+  
+  {% if mode == 'edit' %}  
+  <hr>  
+  <h5 class="mb-3">Gerenciar Anexos e Links</h5>  
+  <div class="row">  
+    <div class="col-md-4">  
+      <h6>Adicionar Link (Vídeo/Notícia)</h6>  
+      <div id="link-form-container">  
+        <div class="mb-2">  
+          <select class="form-select" id="link-asset-type">  
+            <option value="video_link">Vídeo</option>  
+            <option value="news_link">Notícia</option>  
+          </select>  
+        </div>  
+        <div class="mb-2">  
+          <input type="text" class="form-control" placeholder="Título (opcional)" id="link-title">  
+        </div>  
+        <div class="mb-2">  
+          <input type="url" class="form-control" placeholder="URL" id="link-url">  
+        </div>  
+        <button class="btn btn-outline-primary btn-sm" type="button" id="add-link-btn">Adicionar Link</button>  
+      </div>    
+    </div>  
+    <div class="col-md-4">    
+    <h6>Anexar Arquivo (PDF/Imagem/MP4)</h6>    
+    <div id="upload-form-container">    
+      <div class="mb-2">    
+        <input class="form-control" type="text" placeholder="Título (opcional)" id="upload-title">    
+      </div>    
+      <div class="mb-2">    
+        <input class="form-control" type="file" id="upload-file" accept=".pdf,.jpg,.jpeg,.png,.gif,.mp4">    
+      </div>    
+      <button class="btn btn-outline-secondary btn-sm" type="button" id="upload-btn">Upload</button>    
+        
+      <!-- Indicador de carregamento simples -->  
+      <div id="upload-loading" class="mt-3 text-center" style="display: none; padding: 15px; background: #f0f8ff; border: 1px solid #007bff; border-radius: 8px;">  
+        <div class="spinner-border text-primary mb-2" role="status" style="width: 2.5rem; height: 2.5rem;">  
+          <span class="visually-hidden">Carregando...</span>  
+        </div>  
+        <div>  
+          <strong id="upload-loading-text" class="d-block text-primary">Enviando arquivo, aguarde...</strong>  
+          <small id="upload-file-info" class="text-muted d-block mt-1"></small>  
+        </div>  
+      </div>  
+    </div>    
+  </div>
+    <div class="col-md-4">  
+      <h6>Anexos e Links</h6>  
+      <ul class="list-group" id="assets-list">  
+        {% for a in post.assets %}  
+          <li class="list-group-item" data-asset-id="{{ a.id }}">  
+            <div class="d-flex justify-content-between align-items-start">  
+              <div class="flex-grow-1 me-2">  
+                <div class="mb-1">  
+                  <strong>{{ a.title or 'Sem título' }}</strong>  
+                </div>  
+                {% if a.url %}  
+                  <div class="small text-break">  
+                    <a href="{{ a.url }}" target="_blank">{{ a.url }}</a>  
+                  </div>  
+                {% endif %}  
+                {% if a.file_path %}  
+                  <div class="small">  
+                    <a href="{{ url_for('static', filename=a.file_path.split('static/')[1]) }}" target="_blank">Abrir arquivo</a>  
+                  </div>  
+                {% endif %}  
+                <span class="badge bg-secondary mt-1">{{ a.asset_type }}</span>  
+              </div>  
+                
+              <button type="button"   
+                      class="btn btn-sm btn-outline-danger rounded-circle p-0 delete-asset-btn"  
+                      data-asset-id="{{ a.id }}"  
+                      style="width: 28px; height: 28px; line-height: 1; font-size: 20px;"  
+                      title="Excluir anexo">  
+                ×  
+              </button>  
+            </div>  
+          </li>  
+        {% else %}  
+          <li class="list-group-item text-muted" id="no-assets-msg">Nenhum anexo/link ainda.</li>  
+        {% endfor %}  
+      </ul>  
+    </div>  
+  </div>  
+  {% endif %}  
+  
+  <!-- Botão Salvar fixo no final -->  
+  <div class="row mt-4 mb-5">  
+    <div class="col-12">  
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end" style="position: sticky; bottom: 20px; z-index: 1000; background: white; padding: 15px; border-top: 2px solid #dee2e6; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);">  
+        <button class="btn btn-success btn-lg px-5" type="submit">  
+          <i class="bi bi-save"></i> Salvar Conteúdo  
+        </button>  
+      </div>  
+    </div>  
+  </div>  
+</form>  
+
+
+  
+{% if mode == 'edit' %}  
+<script>  
+const postId = {{ post.id }};  
+const csrfToken = "{{ form.csrf_token._value() }}";  
+  
+// Adicionar Link via AJAX  
+document.getElementById('add-link-btn').addEventListener('click', async function(e) {  
+  e.preventDefault();  
+    
+  const assetType = document.getElementById('link-asset-type').value;  
+  const title = document.getElementById('link-title').value.trim();  
+  const url = document.getElementById('link-url').value.trim();  
+    
+  if (!url) {  
+    showAlert('warning', 'URL é obrigatória para adicionar um link.');  
+    return;  
+  }  
+    
+  // Validação básica de URL  
+  try {  
+    new URL(url);  
+  } catch (e) {  
+    showAlert('warning', 'Por favor, insira uma URL válida.');  
+    return;  
+  }  
+    
+  try {  
+    const response = await fetch(`/posts/${postId}/assets/link`, {  
+      method: 'POST',  
+      headers: {  
+        'Content-Type': 'application/json',  
+        'X-Requested-With': 'XMLHttpRequest',  
+        'X-CSRFToken': csrfToken  
+      },  
+      body: JSON.stringify({ asset_type: assetType, title: title, url: url })  
+    });  
+      
+    const data = await response.json();  
+      
+    if (data.success) {  
+      addAssetToList(data.asset);  
+      document.getElementById('link-title').value = '';  
+      document.getElementById('link-url').value = '';  
+      showAlert('success', data.message);  
+    } else {  
+      showAlert('danger', data.message);  
+    }  
+  } catch (error) {  
+    console.error('Erro:', error);  
+    showAlert('danger', 'Erro ao adicionar link. Tente novamente.');  
+  }  
+});  
+  
+// Upload de Arquivo via AJAX com indicador simples  
+document.getElementById('upload-btn').addEventListener('click', function(e) {    
+  e.preventDefault();    
+      
+  const fileInput = document.getElementById('upload-file');    
+  const titleInput = document.getElementById('upload-title');    
+  const uploadBtn = document.getElementById('upload-btn');  
+  const loadingDiv = document.getElementById('upload-loading');  
+  const loadingText = document.getElementById('upload-loading-text');  
+  const fileInfo = document.getElementById('upload-file-info');  
+      
+  if (!fileInput.files[0]) {    
+    showAlert('warning', 'Por favor, selecione um arquivo para fazer upload.');    
+    return;    
+  }    
+      
+  const file = fileInput.files[0];  
+  const fileName = file.name;  
+  const fileSize = (file.size / (1024 * 1024)).toFixed(2); // MB  
+    
+  const formData = new FormData();    
+  formData.append('file', file);    
+  formData.append('title', titleInput.value.trim());    
+    
+  // Desabilitar botão e mostrar loading  
+  uploadBtn.disabled = true;  
+  uploadBtn.textContent = 'Enviando...';  
+  loadingDiv.style.display = 'block';  
+  loadingText.textContent = 'Enviando arquivo, aguarde...';  
+  fileInfo.textContent = `Arquivo: "${fileName}" (${fileSize} MB)`;  
+    
+  // Enviar via fetch  
+  fetch(`/posts/${postId}/assets/upload`, {  
+    method: 'POST',  
+    headers: {  
+      'X-Requested-With': 'XMLHttpRequest'  
+    },  
+    body: formData  
+  })  
+  .then(response => response.json())  
+  .then(data => {  
+    if (data.success) {  
+      // Sucesso - mudar visual do loading  
+      loadingDiv.style.background = '#d4edda';  
+      loadingDiv.style.borderColor = '#28a745';  
+      loadingText.innerHTML = '✅ Upload concluído com sucesso!';  
+      loadingText.style.color = '#28a745';  
+      fileInfo.textContent = '';  
+        
+      // Adicionar asset à lista  
+      addAssetToList(data.asset);    
+      titleInput.value = '';    
+      fileInput.value = '';    
+      showAlert('success', data.message);  
+        
+      // Resetar após 2 segundos  
+      setTimeout(() => {  
+        loadingDiv.style.display = 'none';  
+        loadingDiv.style.background = '#f0f8ff';  
+        loadingDiv.style.borderColor = '#007bff';  
+        loadingText.style.color = '#007bff';  
+        uploadBtn.disabled = false;  
+        uploadBtn.textContent = 'Upload';  
+      }, 2000);  
+    } else {  
+      // Erro  
+      loadingDiv.style.background = '#f8d7da';  
+      loadingDiv.style.borderColor = '#dc3545';  
+      loadingText.innerHTML = '❌ Erro no upload!';  
+      loadingText.style.color = '#dc3545';  
+      fileInfo.textContent = data.message || 'Tente novamente.';  
+      showAlert('danger', data.message);  
+        
+      setTimeout(() => {  
+        loadingDiv.style.display = 'none';  
+        loadingDiv.style.background = '#f0f8ff';  
+        loadingDiv.style.borderColor = '#007bff';  
+        loadingText.style.color = '#007bff';  
+        uploadBtn.disabled = false;  
+        uploadBtn.textContent = 'Upload';  
+      }, 3000);  
+    }  
+  })  
+  .catch(error => {  
+    console.error('Erro:', error);  
+      
+    // Erro de conexão  
+    loadingDiv.style.background = '#f8d7da';  
+    loadingDiv.style.borderColor = '#dc3545';  
+    loadingText.innerHTML = '❌ Erro de conexão!';  
+    loadingText.style.color = '#dc3545';  
+    fileInfo.textContent = 'Verifique sua internet e tente novamente.';  
+    showAlert('danger', 'Erro ao fazer upload. Tente novamente.');  
+      
+    setTimeout(() => {  
+      loadingDiv.style.display = 'none';  
+      loadingDiv.style.background = '#f0f8ff';  
+      loadingDiv.style.borderColor = '#007bff';  
+      loadingText.style.color = '#007bff';  
+      uploadBtn.disabled = false;  
+      uploadBtn.textContent = 'Upload';  
+    }, 3000);  
+  });  
+});
+
+// Deletar Asset via AJAX  
+document.addEventListener('click', async function(e) {  
+  if (e.target.classList.contains('delete-asset-btn')) {  
+    if (!confirm('Tem certeza que deseja excluir este anexo/link?')) {  
+      return;  
+    }  
+      
+    const assetId = e.target.dataset.assetId;  
+      
+    try {  
+      const response = await fetch(`/posts/${postId}/assets/${assetId}/delete`, {  
+        method: 'POST',  
+        headers: {  
+          'X-Requested-With': 'XMLHttpRequest',  
+          'X-CSRFToken': csrfToken  
+        }  
+      });  
+        
+      const data = await response.json();  
+        
+      if (data.success) {  
+        removeAssetFromList(assetId);  
+        showAlert('success', data.message);  
+      } else {  
+        showAlert('danger', data.message);  
+      }  
+    } catch (error) {  
+      console.error('Erro:', error);  
+      showAlert('danger', 'Erro ao excluir anexo. Tente novamente.');  
+    }  
+  }  
+});  
+  
+// Adicionar asset à lista  
+function addAssetToList(asset) {  
+  const assetsList = document.getElementById('assets-list');  
+  const noAssetsMsg = document.getElementById('no-assets-msg');  
+    
+  if (noAssetsMsg) {  
+    noAssetsMsg.remove();  
+  }  
+    
+  const li = document.createElement('li');  
+  li.className = 'list-group-item';  
+  li.dataset.assetId = asset.id;  
+    
+  let contentHtml = `  
+    <div class="d-flex justify-content-between align-items-start">  
+      <div class="flex-grow-1 me-2">  
+        <div class="mb-1"><strong>${escapeHtml(asset.title)}</strong></div>  
+  `;  
+    
+  if (asset.url) {  
+    contentHtml += `<div class="small text-break"><a href="${escapeHtml(asset.url)}" target="_blank">${escapeHtml(asset.url)}</a></div>`;  
+  }  
+    
+  if (asset.file_path) {  
+    const filePath = asset.file_path.replace('static/', '');  
+    contentHtml += `<div class="small"><a href="/static/${filePath}" target="_blank">Abrir arquivo</a></div>`;  
+  }  
+    
+  contentHtml += `  
+        <span class="badge bg-secondary mt-1">${escapeHtml(asset.asset_type)}</span>  
+      </div>  
+      <button type="button"   
+              class="btn btn-sm btn-outline-danger rounded-circle p-0 delete-asset-btn"  
+              data-asset-id="${asset.id}"  
+              style="width: 28px; height: 28px; line-height: 1; font-size: 20px;"  
+              title="Excluir anexo">  
+        ×  
+      </button>  
+    </div>  
+  `;  
+    
+  li.innerHTML = contentHtml;  
+  assetsList.appendChild(li);  
+}  
+  
+// Remover asset da lista  
+function removeAssetFromList(assetId) {  
+  const assetItem = document.querySelector(`li[data-asset-id="${assetId}"]`);  
+  if (assetItem) {  
+    assetItem.remove();  
+  }  
+    
+  const assetsList = document.getElementById('assets-list');  
+  if (assetsList.children.length === 0) {  
+    const li = document.createElement('li');  
+    li.className = 'list-group-item text-muted';  
+    li.id = 'no-assets-msg';  
+    li.textContent = 'Nenhum anexo/link ainda.';  
+    assetsList.appendChild(li);  
+  }  
+}  
+  
+// Mostrar alerta  
+function showAlert(type, message) {  
+  // Remover alertas anteriores  
+  const existingAlerts = document.querySelectorAll('.alert-ajax');  
+  existingAlerts.forEach(alert => alert.remove());  
+    
+  const alertDiv = document.createElement('div');  
+  alertDiv.className = `alert alert-${type} alert-dismissible fade show alert-ajax`;  
+  alertDiv.style.position = 'fixed';  
+  alertDiv.style.top = '20px';  
+  alertDiv.style.right = '20px';  
+  alertDiv.style.zIndex = '9999';  
+  alertDiv.style.minWidth = '300px';  
+  alertDiv.style.maxWidth = '500px';  
+  alertDiv.innerHTML = `  
+    ${escapeHtml(message)}  
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>  
+  `;  
+    
+  document.body.appendChild(alertDiv);  
+    
+  setTimeout(() => {  
+    alertDiv.classList.remove('show');  
+    setTimeout(() => alertDiv.remove(), 150);  
+  }, 5000);  
+}  
+  
+function escapeHtml(text) {    
+  if (!text) return '';    
+  const map = {    
+    '&': '&amp;',    
+    '<': '&lt;',    
+    '>': '&gt;',    
+    '"': '&quot;',    
+    "'": '&#039;'    
+  };    
+  return text.toString().replace(/[&<>"']/g, m => map[m]);    
+}
+</script>  
+{% endif %}  
+{% endblock %}

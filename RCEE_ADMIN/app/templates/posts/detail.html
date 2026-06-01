@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<meta http-equiv="Cache-Control" content="public, max-age=3600">
+
+<div class="container py-5 bg-white">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+
+      <header class="text-center mb-5">
+        <div class="mb-3">
+          {% if post.category %}
+            <!-- AQUI: MUDANÇA DE CORES DA CATEGORIA -->
+            <!-- background-color: Cor do fundo (ex: #f0f0f0, #000000, white) -->
+            <!-- color: Cor da letra (ex: #000000, #ffffff, blue) -->
+            <!-- border: Se quiser borda, mantenha a classe 'border' ou defina border: 1px solid cor -->
+            <span class="badge text-uppercase fw-bold tracking-wide px-3 py-2 rounded-pill border" 
+                  style="background-color: #f8f9fa; color: #ff0000;">
+              {{ post.category.name }}
+            </span>
+          {% endif %}
+        </div>
+
+        <h1 class="fw-bolder text-dark mb-4 display-5" style="letter-spacing: -0.5px; line-height: 1.2;">
+          {{ post.title }}
+        </h1>
+
+        <!-- EXIBIÇÃO DO RESUMO AUTOMÁTICO/MANUAL -->
+        {% if post.summary %}
+          <div class="lead text-secondary mb-4 fs-4 fst-italic">
+            {{ post.summary }}
+          </div>
+        {% endif %}
+
+      </header>
+
+      {% if post.featured_image %}
+        <figure class="mb-5">
+          <img src="{{ url_for('static', filename=post.featured_image.split('static/')[1]) }}" 
+               alt="Imagem de destaque {{ post.title }}"
+               class="img-fluid rounded-4 shadow-sm w-100"
+               style="height: auto; object-fit: contain;">
+        </figure>
+      {% endif %}
+
+      <!-- CONTEÚDO DO ARTIGO -->
+      <article class="article-content fs-5 mb-5 text-dark position-relative" id="main-article">
+        {{ post.body|safe }}
+      </article>
+
+      {% set ns = namespace(tem_material=false) %}
+      {% for a in post.assets %}
+        {% if a.asset_type not in ['editor_media', 'carousel'] %}
+          {% set ns.tem_material = true %}
+        {% endif %}
+      {% endfor %}
+
+      {% if ns.tem_material %}
+        <div class="mt-5 pt-4 border-top">
+          <h6 class="fw-bold mb-4 text-muted text-uppercase small ls-1">Materiais Complementares</h6>
+          
+          <div class="d-flex flex-column gap-3">
+            {% for a in post.assets if a.asset_type not in ['editor_media', 'carousel'] %}
+              <div class="d-flex align-items-center p-3 rounded-3 border bg-white hover-shadow transition-all position-relative">
+                <div class="me-3 fs-3 text-secondary">
+                  {% if a.url %} <i class="bi bi-link-45deg"></i>
+                  {% else %} <i class="bi bi-file-earmark-text"></i>
+                  {% endif %}
+                </div>
+                <div class="flex-grow-1">
+                  {% if a.url %}
+                    <a href="{{ a.url }}" target="_blank" class="text-decoration-none text-dark fw-bold stretched-link">
+                      {{ a.title or a.url }}
+                    </a>
+                    <div class="small text-muted">Link Externo</div>
+                  {% elif a.file_path %}
+                    <a href="{{ url_for('static', filename=a.file_path.split('static/')[1]) }}" target="_blank" class="text-decoration-none text-dark fw-bold stretched-link">
+                      {{ a.title or 'Baixar Arquivo' }}
+                    </a>
+                    <div class="small text-muted">Download disponível</div>
+                  {% endif %}
+                </div>
+                <div class="text-muted">
+                  <i class="bi bi-arrow-right-short fs-4"></i>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="mt-5 text-center">
+        <a href="javascript:history.back()" class="text-decoration-none text-muted small hover-underline">
+          <i class="bi bi-arrow-left me-1"></i> Voltar para a lista
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+  .article-content {
+    line-height: 1.8;
+    color: #2c2c2c;
+    word-wrap: break-word; 
+    overflow-wrap: break-word;
+  }
+
+  /* Imagens normais do artigo — SEM display:block !important para não quebrar o carrossel */
+  .article-content img {
+    max-width: 100% !important;     
+    height: auto !important;
+    border-radius: 4px;
+    margin: 10px 0;
+  }
+
+  /* Carrossel: garante que imagens dentro dos slides se comportem corretamente */
+  .article-content .carousel-item img {
+    display: block !important;
+    max-width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  /* Garante que slides inativos fiquem ocultos (Bootstrap pode ser sobrescrito pelo CSS acima) */
+  .article-content .carousel-item {
+    display: none !important;
+  }
+  .article-content .carousel-item.active {
+    display: block !important;
+  }
+
+  .article-content iframe, 
+  .article-content video, 
+  .article-content embed {
+    width: 100% !important;
+    max-width: 100% !important;
+    aspect-ratio: 16 / 9; 
+    height: auto !important;
+    min-height: 300px;
+    border-radius: 8px;
+    margin: 20px 0;
+    display: block !important;
+  }
+
+  /* Tabelas */
+  .article-content table {
+    width: 100% !important;
+    display: block;
+    overflow-x: auto;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+  }
+  .article-content td, .article-content th {
+    padding: 10px;
+    border: 1px solid #ddd;
+  }
+  
+  .article-content a { color: #0d6efd; text-decoration: underline; }
+  
+  .article-content blockquote {
+    border-left: 4px solid #ccc;
+    color: #666;
+    font-style: italic;
+    background: #f9f9f9;
+    padding: 15px;
+    margin: 20px 0;
+  }
+</style>
+
+<script>  
+  document.addEventListener('DOMContentLoaded', function () {  
+    document.querySelectorAll('#main-article .carousel').forEach(function (el) {  
+      new bootstrap.Carousel(el, {  
+        interval: false,  // não avança automaticamente; mude para ex: 5000 para autoplay  
+        ride: false  
+      });  
+    });  
+  });  
+</script>
+
+{% endblock %}
