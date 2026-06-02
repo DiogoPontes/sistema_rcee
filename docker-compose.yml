@@ -1,4 +1,4 @@
-# docker-compose.yml - Sistema RCEE (ajustado)
+# docker-compose.yml - Sistema RCEE (corrigido)
 services:
   # ─── MYSQL (central, inicializa os 3 bancos via mysql-init) ─────────────────
   mysql:
@@ -41,14 +41,17 @@ services:
       - zookeeper
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: rcee_zookeeper:2181
+      # apontar para o serviço zookeeper pelo nome do serviço
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:229092,PLAINTEXT_HOST://localhost:229092
+      # interno (containers) -> kafka:29092 ; host/external -> localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     ports:
-      - "9092:9092"   # expõe broker para host em 9092 (útil para debug/clients)
+      - "29092:29092"   # porta interna usada entre containers
+      - "9092:9092"     # porta para acesso do host (localhost:9092)
     volumes:
       - kafka_data:/var/lib/kafka/data
     healthcheck:
@@ -72,7 +75,7 @@ services:
       kafka:
         condition: service_started
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
     restart: unless-stopped
 
   # ─── RCEE_ADMIN (web)
@@ -88,7 +91,7 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
     restart: unless-stopped
 
   # ─── RCEE_CONSULTA (web)
@@ -104,7 +107,7 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
     restart: unless-stopped
 
   # ─── CONSUMERS (workers que consomem tópicos Kafka)
@@ -121,7 +124,7 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
     restart: "no"
 
   consulta_consumer:
@@ -137,7 +140,7 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
     restart: "no"
 
 volumes:

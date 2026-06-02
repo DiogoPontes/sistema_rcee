@@ -97,3 +97,16 @@
   border-color: #1a7abf !important;
   color: #ffffff !important;
 }
+
+.axon-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 4rem;
+    letter-spacing: 5px;
+    color: #fff;
+    text-shadow: 0 0 20px rgba(0, 255, 255, 0.6); /* Brilho neon azul/cyan */
+}
+
+.axon-accent {
+    color: #ffd700; /* Dourado */
+}
