@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RCEE - ADMIN</title>
+    <title>AXON - ADMIN</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
       <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     
-    <style>
+      <style>
       body {
         font-family: Arial, Helvetica, sans-serif;
         background-color: #ffffff;
@@ -24,27 +24,53 @@
       }
       
       
-      .left-panel {
-        background: linear-gradient(135deg, #0d1b2a, #1a3a5c);
-        color: white;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        padding: 2rem;
-        text-align: center;
-      }
+      /* Left panel: imagem como camada de fundo (img dentro do container) */
+    .left-panel {
+      position: relative;
+      padding: 0;               /* removemos espaçamentos para imagem cobrir */
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      overflow: hidden;
+      background-color: #081725; /* fallback */
+    }
 
-      
-      .left-panel img {
-        max-width: 1100px;
-        height: auto;
-        margin-bottom: 1.5rem;
-        background: transparent;
-        
-      }
-      
-      .right-panel {
+    /* imagem ocupa todo o espaço do painel e fica atrás do conteúdo */
+    .left-panel img.bg-cover {
+      position: absolute;
+      inset: 0;                 /* top:0; right:0; bottom:0; left:0; */
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center bottom;
+      z-index: 1;
+      display: block;
+      filter: none; /* opcional: usar filter: brightness(0.85); para escurecer */
+    }
+
+    /* overlay leve para melhorar legibilidade do texto */
+    .left-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(2, 12, 23, 0.28); /* ajuste alpha para mais/menos contraste */
+      z-index: 2;
+    }
+
+    /* conteúdo que fica acima da imagem e do overlay */
+    .left-panel .left-panel-content {
+      position: relative;
+      z-index: 3;
+      text-align: center;
+      padding: 40px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .right-panel {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -53,7 +79,53 @@
         position: relative;
       }
 
-      .nexus-footer {
+    /* Título AXON */
+    .axon-title {
+      font-family: 'Rajdhani', system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      font-weight: 900;
+      font-size: 3rem;
+      margin: 6px 0 0;
+      color: #ffffff;
+      letter-spacing: 3px;
+      text-shadow:
+        0 2px 8px rgba(0,0,0,0.6),
+        0 6px 28px rgba(0,180,255,0.06); /* brilho sutil cyan */
+    }
+
+    /* Parte em destaque (dourado) */
+    .axon-accent {
+      color: #ffd26a; /* dourado suave */
+      -webkit-text-stroke: 0.2px rgba(0,0,0,0.12);
+    }
+
+    /* Subtítulo */
+    .axon-subtitle {
+      margin-top: 8px;
+      color: rgba(255,255,255,0.92);
+      font-weight: 500;
+    }
+
+    /* Nome do sistema (CADASTRO) e versão - mantê visíveis */
+    .rcee-system-name {
+      font-weight: 700;
+      color: rgba(255,255,255,0.95);
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+    }
+    .rcee-version {
+      color: rgba(255,255,255,0.78);
+      margin-bottom: 10px;
+      font-size: 0.82rem;
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+      .axon-title { font-size: 2.2rem; letter-spacing: 2px; }
+      .left-panel .left-panel-content { padding: 28px 12px; }
+    }
+
+    .nexus-footer {
             position: relative;
         }
       
@@ -78,48 +150,6 @@
       }
       
 
-      .form-label {
-        font-weight: 500;
-        color: #1a3a5c;
-        margin-bottom: 0.5rem;
-      }
-
-
-      .form-control {
-        border-radius: 6px;
-        border: 1px solid #ced4da;
-        padding: 0.75rem;
-        background-color: #fff;
-      }
-      
-      .form-control:focus {
-        border-color: #3498db;
-        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
-      }
-      
-
-      .btn-custom-login {
-        background-color: #1a3a5c;
-        border: none;
-        border-radius: 6px;
-        padding: 0.8rem;
-        font-weight: 600;
-        font-size: 1rem;
-        margin-top: 1rem;
-        transition: background-color 0.2s;
-      }
-      .btn-custom-login:hover {
-        background-color: #0d1b2a;
-      }
-
-      .rcee-title {
-        font-weight: 900;
-        font-size: 2.2rem;
-        color: white;
-        margin-bottom: 0.2rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    }
-
     
 
 
@@ -143,6 +173,8 @@
 
       <div class="col-md-6 left-panel">
           <img src="{{ url_for('static', filename='imagens/logo.png') }}" alt="Logo">
+          <h1 class="axon-title">AX<span class="axon-accent">ON</span></h1>
+          <p>Inteligência Estratégica em Rede</p>
           <div class="rcee-system-name">ADMIN</div>
           <div class="rcee-version">Versão 1.1</div>
       </div>

@@ -11,7 +11,7 @@ database = os.environ.get('DB_NAME', 'rcee_consulta_db')
 try:
     pymysql.connect(host=host, user=user, password=password, database=database, connect_timeout=5)
     sys.exit(0)
-except:
+except Exception as e:
     sys.exit(1)
 "; do
     echo "MySQL não está pronto, aguardando 2s..."
@@ -29,27 +29,33 @@ with app.app_context():
 
 echo "Garantindo usuário administrador padrão..."
 python - <<'PY'
-import os, pymysql
+import os
+import pymysql
 from werkzeug.security import generate_password_hash
 
-conn = pymysql.connect(
-    host=os.environ.get("DB_HOST", "mysql"),
-    user=os.environ.get("DB_USER", "rcee_user"),
-    password=os.environ.get("DB_PASSWORD", "rcee123"),
-    database=os.environ.get("DB_NAME", "rcee_consulta_db"),
-    autocommit=True
-)
+host = os.environ.get("DB_HOST", "mysql")
+user = os.environ.get("DB_USER", "rcee_user")
+pw = os.environ.get("DB_PASSWORD", "rcee123")
+db_name = os.environ.get("DB_NAME", "rcee_consulta_db")
+
+# Dados do Admin
+admin_email = "admin@rcee.local"
+admin_pass = "Admin@123"
+admin_name = "Administrador Sistema"
+
+conn = pymysql.connect(host=host, user=user, password=pw, database=db_name, autocommit=True)
+
 try:
     with conn.cursor() as cur:
-        cur.execute("SELECT id FROM user WHERE email = %s", ("admin@rcee.local",))
+        # Verifica se já existe
+        cur.execute("SELECT id FROM user WHERE email = %s", (admin_email,))
         if not cur.fetchone():
-            cur.execute(
-                "INSERT INTO user (name, email, password_hash, role, is_active, created_at, instituicao) VALUES (%s, %s, %s, %s, %s, NOW(), %s)",
-                ("Administrador Sistema", "admin@rcee.local", generate_password_hash("Admin@123"), "Admin", 1, "RCEE")
-            )
-            print("Usuário admin criado em rcee_consulta_db.")
+            hash_pw = generate_password_hash(admin_pass)
+            sql = "INSERT INTO user (name, email, password_hash, role, is_active, created_at, instituicao) VALUES (%s, %s, %s, %s, %s, NOW(), %s)"
+            cur.execute(sql, (admin_name, admin_email, hash_pw, "Admin", 1, "RCEE"))
+            print(f"Sucesso: Usuário {admin_email} criado.")
         else:
-            print("Usuário admin já existe em rcee_consulta_db.")
+            print(f"Info: Usuário {admin_email} já existe.")
 finally:
     conn.close()
 PY
