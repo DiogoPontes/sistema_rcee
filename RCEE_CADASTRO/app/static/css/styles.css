@@ -110,3 +110,84 @@
 .axon-accent {
     color: #ffd700; /* Dourado */
 }
+
+/* Left panel: usar a imagem como background e overlay leve */
+.left-panel {
+  position: relative;
+  background-image: url("{{ url_for('static', filename='imagens/fundo2.png') }}");
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  text-align: center;
+  overflow: hidden;
+}
+
+/* Overlay mais claro para deixar a imagem menos escura (ajuste alpha se quiser mais claro) */
+.left-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.15); /* 0.15 = overlay leve; aumente para escurecer */
+  z-index: 1;
+}
+
+/* Conteúdo visível acima do overlay */
+.left-panel > .left-panel-content,
+.left-panel .rcee-system-name,
+.left-panel .axon-title,
+.left-panel .axon-subtitle,
+.left-panel .rcee-version {
+  position: relative;
+  z-index: 2;
+}
+
+/* Título AXON */
+.axon-title {
+  font-family: 'Rajdhani', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-weight: 900;
+  font-size: 3rem;             /* ajuste conforme necessidade */
+  letter-spacing: 4px;
+  margin: 0.5rem 0 0.25rem;
+  color: #ffffff;
+  text-shadow: 0 6px 28px rgba(0, 180, 255, 0.08); /* brilho suave cyan */
+}
+
+/* Parte em destaque (dourado) */
+.axon-accent {
+  color: #ffd700; /* dourado */
+  -webkit-text-stroke: 0.3px rgba(0,0,0,0.12);
+}
+
+/* Subtítulo */
+.axon-subtitle {
+  margin: 0.25rem 0 0;
+  color: rgba(255,255,255,0.92);
+  font-weight: 500;
+}
+
+/* Nome do sistema (CADASTRO) e versão */
+.rcee-system-name {
+  font-weight: 700;
+  color: rgba(255,255,255,0.95);
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+  letter-spacing: 1px;
+}
+.rcee-version {
+  color: rgba(255,255,255,0.75);
+  margin-bottom: 0.6rem;
+  font-size: 0.85rem;
+}
+
+/* Responsividade: reduzir tamanho do título em telas pequenas */
+@media (max-width: 768px) {
+  .axon-title { font-size: 2.2rem; letter-spacing: 2px; }
+  .left-panel { padding: 2rem 1rem; }
+}
